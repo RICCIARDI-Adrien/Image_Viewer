@@ -6,7 +6,7 @@ PATH_SOURCES = Sources
 
 BINARY = image-viewer
 INCLUDES = -I$(PATH_INCLUDES)
-LIBRARIES = -lSDL2
+LIBRARIES = -lSDL2 -lSDL2_image
 SOURCES = $(shell find $(PATH_SOURCES) -name "*.c")
 
 all:

@@ -3,6 +3,7 @@
  * @author Adrien RICCIARDI
  */
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,9 +29,10 @@ static void MainDisplayProgramUsage(char *String_Program_Name)
 		"  - 'q' key : exit program\n", String_Program_Name);
 }
 
-/** Automatically called on program exit, gracefully unintialize SDL. */
+/** Automatically called on program exit, gracefully uninitialize SDL. */
 static void MainExit(void)
 {
+	IMG_Quit();
 	SDL_Quit();
 }
 
@@ -40,6 +42,7 @@ static void MainExit(void)
 int main(int argc, char *argv[])
 {
 	SDL_Event Event;
+	SDL_Surface *Pointer_Surface_Image;
 	
 	// Check arguments
 	if (argc != 2)
@@ -55,7 +58,7 @@ int main(int argc, char *argv[])
 		return EXIT_SUCCESS;
 	}
 	
-	// SDL intialization
+	// Initialize SDL before everything else, so other SDL libraries can be safely initialized
 	if (SDL_Init(SDL_INIT_VIDEO) != 0)
 	{
 		printf("Error : failed to initialize SDL (%s).\n", SDL_GetError());
@@ -63,7 +66,20 @@ int main(int argc, char *argv[])
 	}
 	atexit(MainExit);
 	
-	// TODO try to load the image before creating the viewport
+	// Try to initialize the SDL image library
+	if (IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG | IMG_INIT_TIF) != (IMG_INIT_JPG | IMG_INIT_PNG | IMG_INIT_TIF))
+	{
+		printf("Error : failed to initialize SDL image library (%s).\n", IMG_GetError());
+		return EXIT_FAILURE;
+	}
+	
+	// Try to load the image before creating the viewport
+	Pointer_Surface_Image = IMG_Load(argv[1]);
+	if (Pointer_Surface_Image == NULL)
+	{
+		printf("Error : failed to load image file '%s' (%s).\n", argv[1], IMG_GetError());
+		return EXIT_FAILURE;
+	}
 	
 	// TODO when image is loaded, update window title with image name
 	
