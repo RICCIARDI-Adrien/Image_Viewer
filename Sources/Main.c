@@ -43,6 +43,7 @@ int main(int argc, char *argv[])
 {
 	SDL_Event Event;
 	SDL_Surface *Pointer_Surface_Image;
+	unsigned int Frame_Starting_Time = 0, Elapsed_Time;
 	
 	// Check arguments
 	if (argc != 2)
@@ -84,11 +85,15 @@ int main(int argc, char *argv[])
 	// TODO when image is loaded, update window title with image name
 	
 	// Initialize modules (no need to display an error message if a module initialization fails because the module already did)
-	if (ViewportInitialize(SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480) != 0) return EXIT_FAILURE; // TODO set initial viewport size and window decorations according to parameters saved on previous program exit
+	if (ViewportInitialize(Pointer_Surface_Image) != 0) return EXIT_FAILURE; // TODO set initial viewport size and window decorations according to parameters saved on previous program exit ?
+	SDL_FreeSurface(Pointer_Surface_Image);
 	
 	// Process incoming SDL events
 	while (1)
 	{
+		// Keep the time corresponding to the frame rendering beginning
+		Frame_Starting_Time = SDL_GetTicks();
+		
 		while (SDL_PollEvent(&Event))
 		{
 			switch (Event.type)
@@ -101,5 +106,11 @@ int main(int argc, char *argv[])
 					break;
 			}
 		}
+		
+		ViewportDrawImage();
+		
+		// Wait enough time to get a 60Hz refresh rate
+		Elapsed_Time = SDL_GetTicks() - Frame_Starting_Time;
+		if (Elapsed_Time < 16) SDL_Delay(16 - Elapsed_Time);
 	}
 }
