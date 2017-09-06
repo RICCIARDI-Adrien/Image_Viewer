@@ -100,6 +100,11 @@ int main(int argc, char *argv[])
 			{
 				case SDL_QUIT:
 					return EXIT_SUCCESS;
+					
+				case SDL_WINDOWEVENT:
+					// Tell the viewport that its size changed
+					if (Event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) ViewportAdaptImage(Event.window.data1, Event.window.data2);
+					break;
 				
 				// Unhandled event, do nothing
 				default:
