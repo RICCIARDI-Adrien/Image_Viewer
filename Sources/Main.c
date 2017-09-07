@@ -42,6 +42,7 @@ static void MainExit(void)
 //-------------------------------------------------------------------------------------------------
 int main(int argc, char *argv[])
 {
+	static char String_Program_Title[256];
 	SDL_Event Event;
 	SDL_Surface *Pointer_Surface_Image;
 	unsigned int Frame_Starting_Time = 0, Elapsed_Time;
@@ -84,10 +85,12 @@ int main(int argc, char *argv[])
 		return EXIT_FAILURE;
 	}
 	
-	// TODO when image is loaded, update window title with image name
+	// Create window title from image name
+	strcpy(String_Program_Title, "Image Viewer - ");
+	strncat(String_Program_Title, argv[1], sizeof(String_Program_Title) - sizeof("Image Viewer - "));
 	
 	// Initialize modules (no need to display an error message if a module initialization fails because the module already did)
-	if (ViewportInitialize(Pointer_Surface_Image) != 0) return EXIT_FAILURE; // TODO set initial viewport size and window decorations according to parameters saved on previous program exit ?
+	if (ViewportInitialize(String_Program_Title, Pointer_Surface_Image) != 0) return EXIT_FAILURE; // TODO set initial viewport size and window decorations according to parameters saved on previous program exit ?
 	SDL_FreeSurface(Pointer_Surface_Image);
 	
 	// Process incoming SDL events

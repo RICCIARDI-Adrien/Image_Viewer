@@ -11,11 +11,12 @@
 // Functions
 //-------------------------------------------------------------------------------------------------
 /** Create the main SDL window and the renderer.
+ * @param String_Window_Title The window title to display.
  * @param Pointer_Surface_Image The image to display.
  * @return 0 if the function succeeded,
  * @return -1 if an error occurred.
  */
-int ViewportInitialize(SDL_Surface *Pointer_Surface_Image);
+int ViewportInitialize(char *String_Window_Title, SDL_Surface *Pointer_Surface_Image);
 
 /** Display the image by taking into account zoom and other transformations. */
 void ViewportDrawImage(void);

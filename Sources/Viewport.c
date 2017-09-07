@@ -85,10 +85,10 @@ static void ViewportComputeViewingArea(int Viewport_X, int Viewport_Y, int Zoom_
 //-------------------------------------------------------------------------------------------------
 // Public functions
 //-------------------------------------------------------------------------------------------------
-int ViewportInitialize(SDL_Surface *Pointer_Surface_Image)
+int ViewportInitialize(char *String_Window_Title, SDL_Surface *Pointer_Surface_Image)
 {
 	// Try to create the viewport window
-	Pointer_Viewport_Window = SDL_CreateWindow("Image Viewer", 0, 0, 640, 480, SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED);
+	Pointer_Viewport_Window = SDL_CreateWindow(String_Window_Title, 0, 0, 640, 480, SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED);
 	if (Pointer_Viewport_Window == NULL)
 	{
 		printf("[%s:%d] Error : failed to create the SDL window (%s).\n", __FUNCTION__, __LINE__, SDL_GetError());
