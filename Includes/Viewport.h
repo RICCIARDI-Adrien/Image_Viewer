@@ -20,7 +20,7 @@ int ViewportInitialize(SDL_Surface *Pointer_Surface_Image);
 /** Display the image by taking into account zoom and other transformations. */
 void ViewportDrawImage(void);
 
-/** Add eventual additionnal borders to the original image to make sure its ratio is kept regardless of the viewport dimension.
+/** Add eventual additionnal borders to the original image to make sure its ratio is kept regardless of the viewport dimensions.
  * @param New_Viewport_Width The viewport width in pixels.
  * @param New_Viewport_Height The viewport height in pixels.
  * @return 0 if the function succeeded,

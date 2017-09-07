@@ -124,13 +124,13 @@ int ViewportAdaptImage(int New_Viewport_Width, int New_Viewport_Height)
 {
 	unsigned int Pixel_Format;
 	int Original_Image_Width, Original_Image_Height, Horizontal_Scaling_Percentage, Vertical_Scaling_Percentage;
-	SDL_Rect Rectangle_Original_Image_Dimension;
+	SDL_Rect Rectangle_Original_Image_Dimensions;
 	
-	// Get new viewport dimension
+	// Get new viewport dimensions
 	Viewport_Width = New_Viewport_Width;
 	Viewport_Height = New_Viewport_Height;
 	
-	// Get original image dimension (these values could be kept as global, but SDL_QueryTexture() is really fast)
+	// Get original image dimensions (these values could be kept as global, but SDL_QueryTexture() is really fast)
 	if (SDL_QueryTexture(Pointer_Viewport_Texture_Original_Image, &Pixel_Format, NULL, &Original_Image_Width, &Original_Image_Height) != 0)
 	{
 		printf("[%s:%d] Error : failed to query original image texture parameters (%s).\n", __FUNCTION__, __LINE__, SDL_GetError());
@@ -168,7 +168,7 @@ int ViewportAdaptImage(int New_Viewport_Width, int New_Viewport_Height)
 	// Remove the previously existing texture
 	if (Pointer_Viewport_Texture_Adapted_Image != NULL) SDL_DestroyTexture(Pointer_Viewport_Texture_Adapted_Image);
 	
-	// Create a texture with the right dimension to keep the image ratio
+	// Create a texture with the right dimensions to keep the image ratio
 	Pointer_Viewport_Texture_Adapted_Image = SDL_CreateTexture(Pointer_Viewport_Window_Renderer, Pixel_Format, SDL_TEXTUREACCESS_TARGET, Viewport_Adjusted_Image_Width, Viewport_Adjusted_Image_Height);
 	if (Pointer_Viewport_Texture_Adapted_Image == NULL)
 	{
@@ -176,7 +176,7 @@ int ViewportAdaptImage(int New_Viewport_Width, int New_Viewport_Height)
 		return -1;
 	}
 	
-	// Fill the texture with a visible background color, so the original image dimension are easily visible
+	// Fill the texture with a visible background color, so the original image dimensions are easily visible
 	if (SDL_SetRenderTarget(Pointer_Viewport_Window_Renderer, Pointer_Viewport_Texture_Adapted_Image) != 0)
 	{
 		printf("[%s:%d] Error : failed to target the renderer to the adjusted image texture (%s).\n", __FUNCTION__, __LINE__, SDL_GetError());
@@ -196,11 +196,11 @@ int ViewportAdaptImage(int New_Viewport_Width, int New_Viewport_Height)
 	}
 	
 	// Copy the original image on the adjusted image
-	Rectangle_Original_Image_Dimension.x = 0;
-	Rectangle_Original_Image_Dimension.y = 0;
-	Rectangle_Original_Image_Dimension.w = Original_Image_Width - 1;
-	Rectangle_Original_Image_Dimension.h = Original_Image_Height - 1;
-	if (SDL_RenderCopy(Pointer_Viewport_Window_Renderer, Pointer_Viewport_Texture_Original_Image, NULL, &Rectangle_Original_Image_Dimension) != 0)
+	Rectangle_Original_Image_Dimensions.x = 0;
+	Rectangle_Original_Image_Dimensions.y = 0;
+	Rectangle_Original_Image_Dimensions.w = Original_Image_Width - 1;
+	Rectangle_Original_Image_Dimensions.h = Original_Image_Height - 1;
+	if (SDL_RenderCopy(Pointer_Viewport_Window_Renderer, Pointer_Viewport_Texture_Original_Image, NULL, &Rectangle_Original_Image_Dimensions) != 0)
 	{
 		printf("[%s:%d] Error : failed to render the original image texture on the adapted image texture (%s).\n", __FUNCTION__, __LINE__, SDL_GetError());
 		return -1;
