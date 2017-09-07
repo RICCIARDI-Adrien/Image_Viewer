@@ -217,6 +217,9 @@ int ViewportInitialize(char *String_Window_Title, SDL_Surface *Pointer_Surface_I
 		return -1;
 	}
 	
+	// Do not allow the window to be too small because it can prevent the texture rendering from working
+	SDL_SetWindowMinimumSize(Pointer_Viewport_Window, CONFIGURATION_VIEWPORT_MINIMUM_WINDOW_WIDTH, CONFIGURATION_VIEWPORT_MINIMUM_WINDOW_HEIGHT);
+	
 	return 0;
 }
 
