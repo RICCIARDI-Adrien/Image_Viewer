@@ -2,6 +2,7 @@
  * @see Viewport.h for description.
  * @author Adrien RICCIARDI
  */
+#include <Configuration.h>
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include <Viewport.h>
@@ -48,6 +49,9 @@ static void ViewportComputeViewingArea(int Viewport_X, int Viewport_Y, int Zoom_
 {
 	int Rectangle_X = 0, Rectangle_Y = 0;
 	static int Previous_Zoom_Level_Rectangle_X = 0, Previous_Zoom_Level_Rectangle_Y = 0, Previous_Zoom_Factor = 1;
+	
+	// Do not compute viewing area once more if the maximum zooming level has been reached, because values would overflow
+	if ((Previous_Zoom_Factor == CONFIGURATION_VIEWPORT_MAXIMUM_ZOOM_FACTOR) && (Zoom_Factor == CONFIGURATION_VIEWPORT_MAXIMUM_ZOOM_FACTOR)) return;
 	
 	// Force the view rectangle to start from the viewport origin when there is no zooming
 	if (Zoom_Factor == 1)
