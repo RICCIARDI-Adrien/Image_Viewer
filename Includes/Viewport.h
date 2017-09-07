@@ -29,4 +29,9 @@ void ViewportDrawImage(void);
  */
 int ViewportAdaptImage(int New_Viewport_Width, int New_Viewport_Height);
 
+/** Modify the viewport zoom level.
+ * @param Zoom_Factor The zoom level (1 stands for no zoom, the image is fully displayed).
+ */
+void ViewportSetZoomFactor(int Zoom_Factor);
+
 #endif

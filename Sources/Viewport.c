@@ -30,6 +30,58 @@ static SDL_Texture *Pointer_Viewport_Texture_Original_Image;
 /** The texture holding the image adapted to the current viewport dimensions. */
 static SDL_Texture *Pointer_Viewport_Texture_Adapted_Image = NULL;
 
+/** The rectangle defining the area of the adjusted image to display to the viewport. */
+static SDL_Rect Viewport_Rectangle_View;
+
+//-------------------------------------------------------------------------------------------------
+// Private functions
+//-------------------------------------------------------------------------------------------------
+/** Compute the adjusted image area to display according to the zoom factor.
+ * @param Viewport_X The viewport horizontal coordinate to start viewing from.
+ * @param Viewport_Y The viewport vertical coordinate to start viewing from.
+ * @param Zoom_Factor The new zoom factor.
+ */
+static void ViewportComputeViewingArea(int Viewport_X, int Viewport_Y, int Zoom_Factor)
+{
+	int Rectangle_X = 0, Rectangle_Y = 0;
+	static int Previous_Zoom_Level_Rectangle_X = 0, Previous_Zoom_Level_Rectangle_Y = 0, Previous_Zoom_Factor = 1;
+	
+	// Force the view rectangle to start from the viewport origin when there is no zooming
+	if (Zoom_Factor == 1)
+	{
+		Rectangle_X = 0;
+		Rectangle_Y = 0;
+	}
+	// Handle zooming in by adding to the preceding view rectangle origin the new mouse moves (scaled according to the new zoom factor)
+	else if (Previous_Zoom_Factor < Zoom_Factor)
+	{
+		Rectangle_X = Previous_Zoom_Level_Rectangle_X + (((Viewport_X / Zoom_Factor) * Viewport_Adjusted_Image_Width) / Viewport_Width);
+		Rectangle_Y = Previous_Zoom_Level_Rectangle_Y + (((Viewport_Y / Zoom_Factor) * Viewport_Adjusted_Image_Height) / Viewport_Height);
+	}
+	// Handle zooming out by subtracting to the preceding view rectangle origin the new mouse moves (scaled according to the previous zoom factor, which was greater than the current one and was the factor used to compute the zooming in)
+	else if (Previous_Zoom_Factor > Zoom_Factor)
+	{
+		Rectangle_X = Previous_Zoom_Level_Rectangle_X - (((Viewport_X / Previous_Zoom_Factor) * Viewport_Adjusted_Image_Width) / Viewport_Width);
+		Rectangle_Y = Previous_Zoom_Level_Rectangle_Y - (((Viewport_Y / Previous_Zoom_Factor) * Viewport_Adjusted_Image_Height) / Viewport_Height);
+	}
+	
+	// Make sure no negative coordinates are generated
+	if (Rectangle_X < 0) Rectangle_X = 0;
+	if (Rectangle_Y < 0) Rectangle_Y = 0;
+	
+	// There is nothing to do when zooming to 1x because the for loop will immediately exit and x and y coordinates will be set to 0
+	Viewport_Rectangle_View.x = Rectangle_X;
+	Viewport_Rectangle_View.y = Rectangle_Y;
+	
+	// The smaller the rectangle is, the more the image will be zoomed
+	Viewport_Rectangle_View.w = (Viewport_Adjusted_Image_Width / Zoom_Factor) - 1;
+	Viewport_Rectangle_View.h = (Viewport_Adjusted_Image_Height / Zoom_Factor) - 1;
+	
+	Previous_Zoom_Level_Rectangle_X = Rectangle_X;
+	Previous_Zoom_Level_Rectangle_Y = Rectangle_Y;
+	Previous_Zoom_Factor = Zoom_Factor;
+}
+
 //-------------------------------------------------------------------------------------------------
 // Public functions
 //-------------------------------------------------------------------------------------------------
@@ -64,7 +116,7 @@ int ViewportInitialize(SDL_Surface *Pointer_Surface_Image)
 
 void ViewportDrawImage(void)
 {
-	SDL_RenderCopyEx(Pointer_Viewport_Window_Renderer, Pointer_Viewport_Texture_Adapted_Image, NULL, NULL, 0, NULL, 0);
+	SDL_RenderCopyEx(Pointer_Viewport_Window_Renderer, Pointer_Viewport_Texture_Adapted_Image, &Viewport_Rectangle_View, NULL, 0, NULL, 0);
 	SDL_RenderPresent(Pointer_Viewport_Window_Renderer);
 }
 
@@ -165,5 +217,17 @@ int ViewportAdaptImage(int New_Viewport_Width, int New_Viewport_Height)
 		return -1;
 	}
 	
+	// Reset zoom when resizing the window to avoid aiming to whatever but the right place
+	ViewportComputeViewingArea(0, 0, 1);
+	
 	return 0;
+}
+
+void ViewportSetZoomFactor(int Zoom_Factor)
+{
+	int Mouse_X, Mouse_Y;
+	
+	// Start the rectangle at on-screen the mouse coordinates (zoom factor must be taken into account)
+	SDL_GetMouseState(&Mouse_X, &Mouse_Y); // TODO put the mouse at the center of the zooming rectangle to make zooming more natural
+	ViewportComputeViewingArea(Mouse_X, Mouse_Y, Zoom_Factor);
 }

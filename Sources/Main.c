@@ -2,6 +2,7 @@
  * Program initialization and main loop.
  * @author Adrien RICCIARDI
  */
+#include <Configuration.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <stdio.h>
@@ -44,6 +45,7 @@ int main(int argc, char *argv[])
 	SDL_Event Event;
 	SDL_Surface *Pointer_Surface_Image;
 	unsigned int Frame_Starting_Time = 0, Elapsed_Time;
+	int Zoom_Factor = 1;
 	
 	// Check arguments
 	if (argc != 2)
@@ -103,9 +105,27 @@ int main(int argc, char *argv[])
 					
 				case SDL_WINDOWEVENT:
 					// Tell the viewport that its size changed
-					if (Event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) ViewportAdaptImage(Event.window.data1, Event.window.data2);
+					if (Event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+					{
+						ViewportAdaptImage(Event.window.data1, Event.window.data2);
+						Zoom_Factor = 1; // Zoom has been reset when resizing the window
+					}
 					break;
-				
+					
+				case SDL_MOUSEWHEEL:
+					// Wheel is rotated toward the user, increment the zoom factor
+					if (Event.wheel.y > 0)
+					{
+						if (Zoom_Factor < CONFIGURATION_VIEWPORT_MAXIMUM_ZOOM_FACTOR) Zoom_Factor *= 2;
+					}
+					// Wheel is rotated away from the user, decrement the zoom factor
+					else
+					{
+						if (Zoom_Factor > 1) Zoom_Factor /= 2;
+					}
+					ViewportSetZoomFactor(Zoom_Factor);
+					break;
+					
 				// Unhandled event, do nothing
 				default:
 					break;
