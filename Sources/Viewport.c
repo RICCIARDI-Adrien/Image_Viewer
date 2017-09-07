@@ -123,7 +123,7 @@ void ViewportDrawImage(void)
 int ViewportAdaptImage(int New_Viewport_Width, int New_Viewport_Height)
 {
 	unsigned int Pixel_Format;
-	int Original_Image_Width, Original_Image_Height, Scaling_Percentage;
+	int Original_Image_Width, Original_Image_Height, Horizontal_Scaling_Percentage, Vertical_Scaling_Percentage;
 	SDL_Rect Rectangle_Original_Image_Dimension;
 	
 	// Get new viewport dimension
@@ -144,28 +144,24 @@ int ViewportAdaptImage(int New_Viewport_Width, int New_Viewport_Height)
 		Viewport_Adjusted_Image_Width = Viewport_Width;
 		Viewport_Adjusted_Image_Height = Viewport_Height;
 	}
-	// Image is bigger than the viewport, make the adapted image use the biggest original dimension and fill the other one to keep ratio
+	// Image is bigger than the viewport, make sure it will fit in the current viewport
 	else
 	{
-		// Fill the bottom part of the image if the image is larger than higher
-		if (Original_Image_Width > Original_Image_Height)
+		// Determine which size (horizontal or vertical) must be filled to keep the ratio (all computations are made with percentages to be easier to understand, and also because multiplying by 100 allows simple and fast fixed calculations with accurate enough results)
+		Horizontal_Scaling_Percentage = (100 * Original_Image_Width) / Viewport_Width; // Find how much the image is larger than the viewport
+		Vertical_Scaling_Percentage = (100 * Original_Image_Height) / Viewport_Height; // Find how much the image is higher than the viewport
+		
+		// Horizontal size is more "compressed" than vertical one for this viewport, so display the full image horizontal size and adjust vertical size to keep ratio
+		if (Horizontal_Scaling_Percentage > Vertical_Scaling_Percentage)
 		{
 			Viewport_Adjusted_Image_Width = Original_Image_Width; // Keep the width
-			
-			// Compute an adjusted image height that is proportional to the viewport height (all computations are made with percentages to be easier to understand, and also because multiplying by 100 allows simple and fast fixed calculations with accurate enough results)
-			Scaling_Percentage = (100 * Original_Image_Width) / Viewport_Width; // This is the percentage the viewport must be scaled to be as large as the original image, it will be used to determine the adjusted image height
-			// Adjusted image height is the viewport height scaled by the percentage the viewport width was scaled, this way the image is proportionally adjusted to the viewport
-			Viewport_Adjusted_Image_Height = (Viewport_Height * Scaling_Percentage) / 100;
+			Viewport_Adjusted_Image_Height = (Viewport_Height * Horizontal_Scaling_Percentage) / 100; // Fill the image bottom to keep the ratio
 		}
-		// Original image height is greater or equal to image width
+		// Vertical size is more "compressed" than horizontal one for this viewport, so display the full image vertical size and adjust horizontal size to keep ratio
 		else
 		{
 			Viewport_Adjusted_Image_Height = Original_Image_Height; // Keep the height
-			
-			// Compute an adjusted image width that is proportional to the viewport width (all computations are made with percentages to be easier to understand, and also because multiplying by 100 allows simple and fast fixed calculations with accurate enough results)
-			Scaling_Percentage = (100 * Original_Image_Height) / Viewport_Height; // This is the percentage the viewport must be scaled to be as high as the original image, it will be used to determine the adjusted image width
-			// Adjusted image width is the viewport width scaled by the percentage the viewport height was scaled, this way the image is proportionally adjusted to the viewport
-			Viewport_Adjusted_Image_Width = (Viewport_Width * Scaling_Percentage) / 100;
+			Viewport_Adjusted_Image_Width = (Viewport_Width * Vertical_Scaling_Percentage) / 100; // Fill the image right to keep the ratio
 		}
 	}
 	
