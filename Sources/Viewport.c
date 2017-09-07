@@ -33,6 +33,9 @@ static SDL_Texture *Pointer_Viewport_Texture_Adapted_Image = NULL;
 /** The rectangle defining the area of the adjusted image to display to the viewport. */
 static SDL_Rect Viewport_Rectangle_View;
 
+/** The flip value to apply to the image when adapting it to the viewport. */
+static SDL_RendererFlip Viewport_Adapted_Image_Flipping_Mode = SDL_FLIP_NONE;
+
 //-------------------------------------------------------------------------------------------------
 // Private functions
 //-------------------------------------------------------------------------------------------------
@@ -82,53 +85,15 @@ static void ViewportComputeViewingArea(int Viewport_X, int Viewport_Y, int Zoom_
 	Previous_Zoom_Factor = Zoom_Factor;
 }
 
-//-------------------------------------------------------------------------------------------------
-// Public functions
-//-------------------------------------------------------------------------------------------------
-int ViewportInitialize(char *String_Window_Title, SDL_Surface *Pointer_Surface_Image)
-{
-	// Try to create the viewport window
-	Pointer_Viewport_Window = SDL_CreateWindow(String_Window_Title, 0, 0, 640, 480, SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED);
-	if (Pointer_Viewport_Window == NULL)
-	{
-		printf("[%s:%d] Error : failed to create the SDL window (%s).\n", __FUNCTION__, __LINE__, SDL_GetError());
-		return -1;
-	}
-	
-	// Try to create an hardware-accelerated renderer to plug to the window
-	Pointer_Viewport_Window_Renderer = SDL_CreateRenderer(Pointer_Viewport_Window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-	if (Pointer_Viewport_Window_Renderer == NULL)
-	{
-		printf("[%s:%d] Error : failed to create the SDL window renderer (%s).\n", __FUNCTION__, __LINE__, SDL_GetError());
-		return -1;
-	}
-	
-	// Convert the image surface to a texture
-	Pointer_Viewport_Texture_Original_Image = SDL_CreateTextureFromSurface(Pointer_Viewport_Window_Renderer, Pointer_Surface_Image);
-	if (Pointer_Viewport_Texture_Original_Image == NULL)
-	{
-		printf("[%s:%d] Error : failed to convert the image surface to a texture (%s).\n", __FUNCTION__, __LINE__, SDL_GetError());
-		return -1;
-	}
-	
-	return 0;
-}
-
-void ViewportDrawImage(void)
-{
-	SDL_RenderCopyEx(Pointer_Viewport_Window_Renderer, Pointer_Viewport_Texture_Adapted_Image, &Viewport_Rectangle_View, NULL, 0, NULL, 0);
-	SDL_RenderPresent(Pointer_Viewport_Window_Renderer);
-}
-
-int ViewportAdaptImage(int New_Viewport_Width, int New_Viewport_Height)
+/** Add eventual additionnal borders to the original image to make sure its ratio is kept regardless of the viewport dimensions.
+ * @return 0 if the function succeeded,
+ * @return -1 if an error occurred.
+ */
+int ViewportAdaptImage(void)
 {
 	unsigned int Pixel_Format;
 	int Original_Image_Width, Original_Image_Height, Horizontal_Scaling_Percentage, Vertical_Scaling_Percentage;
 	SDL_Rect Rectangle_Original_Image_Dimensions;
-	
-	// Get new viewport dimensions
-	Viewport_Width = New_Viewport_Width;
-	Viewport_Height = New_Viewport_Height;
 	
 	// Get original image dimensions (these values could be kept as global, but SDL_QueryTexture() is really fast)
 	if (SDL_QueryTexture(Pointer_Viewport_Texture_Original_Image, &Pixel_Format, NULL, &Original_Image_Width, &Original_Image_Height) != 0)
@@ -200,7 +165,7 @@ int ViewportAdaptImage(int New_Viewport_Width, int New_Viewport_Height)
 	Rectangle_Original_Image_Dimensions.y = 0;
 	Rectangle_Original_Image_Dimensions.w = Original_Image_Width - 1;
 	Rectangle_Original_Image_Dimensions.h = Original_Image_Height - 1;
-	if (SDL_RenderCopy(Pointer_Viewport_Window_Renderer, Pointer_Viewport_Texture_Original_Image, NULL, &Rectangle_Original_Image_Dimensions) != 0)
+	if (SDL_RenderCopyEx(Pointer_Viewport_Window_Renderer, Pointer_Viewport_Texture_Original_Image, NULL, &Rectangle_Original_Image_Dimensions, 0, NULL, Viewport_Adapted_Image_Flipping_Mode) != 0)
 	{
 		printf("[%s:%d] Error : failed to render the original image texture on the adapted image texture (%s).\n", __FUNCTION__, __LINE__, SDL_GetError());
 		return -1;
@@ -219,6 +184,54 @@ int ViewportAdaptImage(int New_Viewport_Width, int New_Viewport_Height)
 	return 0;
 }
 
+//-------------------------------------------------------------------------------------------------
+// Public functions
+//-------------------------------------------------------------------------------------------------
+int ViewportInitialize(char *String_Window_Title, SDL_Surface *Pointer_Surface_Image)
+{
+	// Try to create the viewport window
+	Pointer_Viewport_Window = SDL_CreateWindow(String_Window_Title, 0, 0, 640, 480, SDL_WINDOW_RESIZABLE | SDL_WINDOW_MAXIMIZED);
+	if (Pointer_Viewport_Window == NULL)
+	{
+		printf("[%s:%d] Error : failed to create the SDL window (%s).\n", __FUNCTION__, __LINE__, SDL_GetError());
+		return -1;
+	}
+	
+	// Try to create an hardware-accelerated renderer to plug to the window
+	Pointer_Viewport_Window_Renderer = SDL_CreateRenderer(Pointer_Viewport_Window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	if (Pointer_Viewport_Window_Renderer == NULL)
+	{
+		printf("[%s:%d] Error : failed to create the SDL window renderer (%s).\n", __FUNCTION__, __LINE__, SDL_GetError());
+		return -1;
+	}
+	
+	// Convert the image surface to a texture
+	Pointer_Viewport_Texture_Original_Image = SDL_CreateTextureFromSurface(Pointer_Viewport_Window_Renderer, Pointer_Surface_Image);
+	if (Pointer_Viewport_Texture_Original_Image == NULL)
+	{
+		printf("[%s:%d] Error : failed to convert the image surface to a texture (%s).\n", __FUNCTION__, __LINE__, SDL_GetError());
+		return -1;
+	}
+	
+	return 0;
+}
+
+void ViewportDrawImage(void)
+{
+	SDL_RenderCopyEx(Pointer_Viewport_Window_Renderer, Pointer_Viewport_Texture_Adapted_Image, &Viewport_Rectangle_View, NULL, 0, NULL, 0);
+	SDL_RenderPresent(Pointer_Viewport_Window_Renderer);
+}
+
+void ViewportSetDimensions(int New_Viewport_Width, int New_Viewport_Height)
+{
+	// Store new viewport dimensions
+	Viewport_Width = New_Viewport_Width;
+	Viewport_Height = New_Viewport_Height;
+	
+	// Add additionnal borders to the image to keep its ratio
+	ViewportAdaptImage();
+}
+
 void ViewportSetZoomFactor(int Zoom_Factor)
 {
 	int Mouse_X, Mouse_Y;
@@ -226,4 +239,34 @@ void ViewportSetZoomFactor(int Zoom_Factor)
 	// Start the rectangle at on-screen the mouse coordinates (zoom factor must be taken into account)
 	SDL_GetMouseState(&Mouse_X, &Mouse_Y); // TODO put the mouse at the center of the zooming rectangle to make zooming more natural
 	ViewportComputeViewingArea(Mouse_X, Mouse_Y, Zoom_Factor);
+}
+
+void ViewportSetFlippingMode(TViewportFlippingModeID Flipping_Mode_ID)
+{
+	// Update renderer flip flags according to the new mode
+	switch (Flipping_Mode_ID)
+	{
+		case VIEWPORT_FLIPPING_MODE_ID_NORMAL:
+			Viewport_Adapted_Image_Flipping_Mode = SDL_FLIP_NONE;
+			break;
+			
+		case VIEWPORT_FLIPPING_MODE_ID_HORIZONTAL:
+			Viewport_Adapted_Image_Flipping_Mode = SDL_FLIP_HORIZONTAL;
+			break;
+			
+		case VIEWPORT_FLIPPING_MODE_ID_VERTICAL:
+			Viewport_Adapted_Image_Flipping_Mode = SDL_FLIP_VERTICAL;
+			break;
+			
+		case VIEWPORT_FLIPPING_MODE_ID_HORIZONTAL_AND_VERTICAL:
+			Viewport_Adapted_Image_Flipping_Mode = SDL_FLIP_HORIZONTAL | SDL_FLIP_VERTICAL;
+			break;
+			
+		default:
+			printf("[%s:%d] Error : bad flipping mode ID provided (%d).\n", __FUNCTION__, __LINE__, Flipping_Mode_ID);
+			return;
+	}
+	
+	// Redraw the image with the newly selected flipping mode
+	ViewportAdaptImage();
 }

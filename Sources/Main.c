@@ -47,6 +47,7 @@ int main(int argc, char *argv[])
 	SDL_Surface *Pointer_Surface_Image;
 	unsigned int Frame_Starting_Time = 0, Elapsed_Time;
 	int Zoom_Factor = 1;
+	TViewportFlippingModeID Flipping_Mode = VIEWPORT_FLIPPING_MODE_ID_NORMAL;
 	
 	// Check arguments
 	if (argc != 2)
@@ -110,7 +111,7 @@ int main(int argc, char *argv[])
 					// Tell the viewport that its size changed
 					if (Event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
 					{
-						ViewportAdaptImage(Event.window.data1, Event.window.data2);
+						ViewportSetDimensions(Event.window.data1, Event.window.data2);
 						Zoom_Factor = 1; // Zoom has been reset when resizing the window
 					}
 					break;
@@ -127,6 +128,20 @@ int main(int argc, char *argv[])
 						if (Zoom_Factor > 1) Zoom_Factor /= 2;
 					}
 					ViewportSetZoomFactor(Zoom_Factor);
+					break;
+					
+				case SDL_KEYDOWN:
+					// Toggle image flipping
+					if (Event.key.keysym.sym == SDLK_f)
+					{
+						// Set next available flipping mode
+						Flipping_Mode++;
+						if (Flipping_Mode >= VIEWPORT_FLIPPING_MODE_IDS_COUNT) Flipping_Mode = 0;
+						ViewportSetFlippingMode(Flipping_Mode);
+						
+						// Zoom has been reset when flipping the image
+						Zoom_Factor = 1;
+					}
 					break;
 					
 				// Unhandled event, do nothing

@@ -8,6 +8,19 @@
 #include <SDL2/SDL.h>
 
 //-------------------------------------------------------------------------------------------------
+// Types
+//-------------------------------------------------------------------------------------------------
+/** All available flipping modes. */
+typedef enum
+{
+	VIEWPORT_FLIPPING_MODE_ID_NORMAL, //!< Flipping is disabled.
+	VIEWPORT_FLIPPING_MODE_ID_HORIZONTAL, //!< Horizontal flipping.
+	VIEWPORT_FLIPPING_MODE_ID_VERTICAL, //!< Vertical flipping.
+	VIEWPORT_FLIPPING_MODE_ID_HORIZONTAL_AND_VERTICAL, //!< Both horizontal and vertical flipping.
+	VIEWPORT_FLIPPING_MODE_IDS_COUNT //!< How many flipping modes are available.
+} TViewportFlippingModeID;
+
+//-------------------------------------------------------------------------------------------------
 // Functions
 //-------------------------------------------------------------------------------------------------
 /** Create the main SDL window and the renderer.
@@ -24,15 +37,18 @@ void ViewportDrawImage(void);
 /** Add eventual additionnal borders to the original image to make sure its ratio is kept regardless of the viewport dimensions.
  * @param New_Viewport_Width The viewport width in pixels.
  * @param New_Viewport_Height The viewport height in pixels.
- * @return 0 if the function succeeded,
- * @return -1 if an error occurred.
- * @note Call this function when the window has been resized.
  */
-int ViewportAdaptImage(int New_Viewport_Width, int New_Viewport_Height);
+void ViewportSetDimensions(int New_Viewport_Width, int New_Viewport_Height);
 
 /** Modify the viewport zoom level.
  * @param Zoom_Factor The zoom level (1 stands for no zoom, the image is fully displayed).
  */
 void ViewportSetZoomFactor(int Zoom_Factor);
+
+/** Set a specific flipping mode for the currently loaded image.
+ * @param Flipping_Mode_ID The flipping mode to set.
+ * @note Function does nothing if a non-existing flipping mode ID is provided.
+ */
+void ViewportSetFlippingMode(TViewportFlippingModeID Flipping_Mode_ID);
 
 #endif
