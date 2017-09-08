@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 	SDL_Event Event;
 	SDL_Surface *Pointer_Surface_Image;
 	unsigned int Frame_Starting_Time = 0, Elapsed_Time;
-	int Zoom_Factor = 1;
+	int Mouse_X, Mouse_Y, Zoom_Factor = 1;
 	TViewportFlippingModeID Flipping_Mode = VIEWPORT_FLIPPING_MODE_ID_NORMAL;
 	
 	// Check arguments
@@ -127,7 +127,9 @@ int main(int argc, char *argv[])
 					{
 						if (Zoom_Factor > 1) Zoom_Factor /= 2;
 					}
-					ViewportSetZoomFactor(Zoom_Factor);
+					// Start zooming area from the mouse coordinates
+					SDL_GetMouseState(&Mouse_X, &Mouse_Y); // TODO put the mouse at the center of the zooming rectangle to make zooming more natural
+					ViewportSetZoomedArea(Mouse_X, Mouse_Y, Zoom_Factor);
 					break;
 					
 				case SDL_KEYDOWN:

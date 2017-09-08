@@ -40,55 +40,6 @@ static SDL_RendererFlip Viewport_Adapted_Image_Flipping_Mode = SDL_FLIP_NONE;
 //-------------------------------------------------------------------------------------------------
 // Private functions
 //-------------------------------------------------------------------------------------------------
-/** Compute the adjusted image area to display according to the zoom factor.
- * @param Viewport_X The viewport horizontal coordinate to start viewing from.
- * @param Viewport_Y The viewport vertical coordinate to start viewing from.
- * @param Zoom_Factor The new zoom factor.
- */
-static void ViewportComputeViewingArea(int Viewport_X, int Viewport_Y, int Zoom_Factor)
-{
-	int Rectangle_X = 0, Rectangle_Y = 0;
-	static int Previous_Zoom_Level_Rectangle_X = 0, Previous_Zoom_Level_Rectangle_Y = 0, Previous_Zoom_Factor = 1;
-	
-	// Do not compute viewing area once more if the maximum zooming level has been reached, because values would overflow
-	if ((Previous_Zoom_Factor == CONFIGURATION_VIEWPORT_MAXIMUM_ZOOM_FACTOR) && (Zoom_Factor == CONFIGURATION_VIEWPORT_MAXIMUM_ZOOM_FACTOR)) return;
-	
-	// Force the view rectangle to start from the viewport origin when there is no zooming
-	if (Zoom_Factor == 1)
-	{
-		Rectangle_X = 0;
-		Rectangle_Y = 0;
-	}
-	// Handle zooming in by adding to the preceding view rectangle origin the new mouse moves (scaled according to the new zoom factor)
-	else if (Previous_Zoom_Factor < Zoom_Factor)
-	{
-		Rectangle_X = Previous_Zoom_Level_Rectangle_X + (((Viewport_X / Zoom_Factor) * Viewport_Adjusted_Image_Width) / Viewport_Width);
-		Rectangle_Y = Previous_Zoom_Level_Rectangle_Y + (((Viewport_Y / Zoom_Factor) * Viewport_Adjusted_Image_Height) / Viewport_Height);
-	}
-	// Handle zooming out by subtracting to the preceding view rectangle origin the new mouse moves (scaled according to the previous zoom factor, which was greater than the current one and was the factor used to compute the zooming in)
-	else if (Previous_Zoom_Factor > Zoom_Factor)
-	{
-		Rectangle_X = Previous_Zoom_Level_Rectangle_X - (((Viewport_X / Previous_Zoom_Factor) * Viewport_Adjusted_Image_Width) / Viewport_Width);
-		Rectangle_Y = Previous_Zoom_Level_Rectangle_Y - (((Viewport_Y / Previous_Zoom_Factor) * Viewport_Adjusted_Image_Height) / Viewport_Height);
-	}
-	
-	// Make sure no negative coordinates are generated
-	if (Rectangle_X < 0) Rectangle_X = 0;
-	if (Rectangle_Y < 0) Rectangle_Y = 0;
-	
-	// There is nothing to do when zooming to 1x because the for loop will immediately exit and x and y coordinates will be set to 0
-	Viewport_Rectangle_View.x = Rectangle_X;
-	Viewport_Rectangle_View.y = Rectangle_Y;
-	
-	// The smaller the rectangle is, the more the image will be zoomed
-	Viewport_Rectangle_View.w = (Viewport_Adjusted_Image_Width / Zoom_Factor) - 1;
-	Viewport_Rectangle_View.h = (Viewport_Adjusted_Image_Height / Zoom_Factor) - 1;
-	
-	Previous_Zoom_Level_Rectangle_X = Rectangle_X;
-	Previous_Zoom_Level_Rectangle_Y = Rectangle_Y;
-	Previous_Zoom_Factor = Zoom_Factor;
-}
-
 /** Add eventual additionnal borders to the original image to make sure its ratio is kept regardless of the viewport dimensions.
  * @return 0 if the function succeeded,
  * @return -1 if an error occurred.
@@ -183,7 +134,7 @@ int ViewportAdaptImage(void)
 	}
 	
 	// Reset zoom when resizing the window to avoid aiming to whatever but the right place
-	ViewportComputeViewingArea(0, 0, 1);
+	ViewportSetZoomedArea(0, 0, 1);
 	
 	return 0;
 }
@@ -239,13 +190,48 @@ void ViewportSetDimensions(int New_Viewport_Width, int New_Viewport_Height)
 	ViewportAdaptImage();
 }
 
-void ViewportSetZoomFactor(int Zoom_Factor)
+void ViewportSetZoomedArea(int Viewport_X, int Viewport_Y, int Zoom_Factor)
 {
-	int Mouse_X, Mouse_Y;
+	int Rectangle_X = 0, Rectangle_Y = 0;
+	static int Previous_Zoom_Level_Rectangle_X = 0, Previous_Zoom_Level_Rectangle_Y = 0, Previous_Zoom_Factor = 1;
 	
-	// Start the rectangle at on-screen the mouse coordinates (zoom factor must be taken into account)
-	SDL_GetMouseState(&Mouse_X, &Mouse_Y); // TODO put the mouse at the center of the zooming rectangle to make zooming more natural
-	ViewportComputeViewingArea(Mouse_X, Mouse_Y, Zoom_Factor);
+	// Do not compute viewing area once more if the maximum zooming level has been reached, because values would overflow
+	if ((Previous_Zoom_Factor == CONFIGURATION_VIEWPORT_MAXIMUM_ZOOM_FACTOR) && (Zoom_Factor == CONFIGURATION_VIEWPORT_MAXIMUM_ZOOM_FACTOR)) return;
+	
+	// Force the view rectangle to start from the viewport origin when there is no zooming
+	if (Zoom_Factor == 1)
+	{
+		Rectangle_X = 0;
+		Rectangle_Y = 0;
+	}
+	// Handle zooming in by adding to the preceding view rectangle origin the new mouse moves (scaled according to the new zoom factor)
+	else if (Previous_Zoom_Factor < Zoom_Factor)
+	{
+		Rectangle_X = Previous_Zoom_Level_Rectangle_X + (((Viewport_X / Zoom_Factor) * Viewport_Adjusted_Image_Width) / Viewport_Width);
+		Rectangle_Y = Previous_Zoom_Level_Rectangle_Y + (((Viewport_Y / Zoom_Factor) * Viewport_Adjusted_Image_Height) / Viewport_Height);
+	}
+	// Handle zooming out by subtracting to the preceding view rectangle origin the new mouse moves (scaled according to the previous zoom factor, which was greater than the current one and was the factor used to compute the zooming in)
+	else if (Previous_Zoom_Factor > Zoom_Factor)
+	{
+		Rectangle_X = Previous_Zoom_Level_Rectangle_X - (((Viewport_X / Previous_Zoom_Factor) * Viewport_Adjusted_Image_Width) / Viewport_Width);
+		Rectangle_Y = Previous_Zoom_Level_Rectangle_Y - (((Viewport_Y / Previous_Zoom_Factor) * Viewport_Adjusted_Image_Height) / Viewport_Height);
+	}
+	
+	// Make sure no negative coordinates are generated
+	if (Rectangle_X < 0) Rectangle_X = 0;
+	if (Rectangle_Y < 0) Rectangle_Y = 0;
+	
+	// There is nothing to do when zooming to 1x because the for loop will immediately exit and x and y coordinates will be set to 0
+	Viewport_Rectangle_View.x = Rectangle_X;
+	Viewport_Rectangle_View.y = Rectangle_Y;
+	
+	// The smaller the rectangle is, the more the image will be zoomed
+	Viewport_Rectangle_View.w = (Viewport_Adjusted_Image_Width / Zoom_Factor) - 1;
+	Viewport_Rectangle_View.h = (Viewport_Adjusted_Image_Height / Zoom_Factor) - 1;
+	
+	Previous_Zoom_Level_Rectangle_X = Rectangle_X;
+	Previous_Zoom_Level_Rectangle_Y = Rectangle_Y;
+	Previous_Zoom_Factor = Zoom_Factor;
 }
 
 void ViewportSetFlippingMode(TViewportFlippingModeID Flipping_Mode_ID)

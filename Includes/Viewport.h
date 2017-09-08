@@ -40,10 +40,12 @@ void ViewportDrawImage(void);
  */
 void ViewportSetDimensions(int New_Viewport_Width, int New_Viewport_Height);
 
-/** Modify the viewport zoom level.
- * @param Zoom_Factor The zoom level (1 stands for no zoom, the image is fully displayed).
+/** Zoom a specific area of the image.
+ * @param Viewport_X The viewport horizontal coordinate to start viewing from.
+ * @param Viewport_Y The viewport vertical coordinate to start viewing from.
+ * @param Zoom_Factor The zoom level (1 stands for no zoom (the image is fully displayed)).
  */
-void ViewportSetZoomFactor(int Zoom_Factor);
+void ViewportSetZoomedArea(int Viewport_X, int Y, int Zoom_Factor);
 
 /** Set a specific flipping mode for the currently loaded image.
  * @param Flipping_Mode_ID The flipping mode to set.
