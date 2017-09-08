@@ -8,6 +8,9 @@
 //-------------------------------------------------------------------------------------------------
 // Constants
 //-------------------------------------------------------------------------------------------------
+/** The display refresh rate period in milliseconds (1 / 60Hz ~= 16ms). 60 frames per second are fine for a video game, so they are more than enough for an image viewer. */
+#define CONFIGURATION_DISPLAY_REFRESH_RATE_PERIOD 16
+
 /** The maximum allowed zoom factor value. */
 #define CONFIGURATION_VIEWPORT_MAXIMUM_ZOOM_FACTOR 256
 

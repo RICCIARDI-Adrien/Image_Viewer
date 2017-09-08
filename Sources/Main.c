@@ -168,6 +168,6 @@ int main(int argc, char *argv[])
 		
 		// Wait enough time to get a 60Hz refresh rate
 		Elapsed_Time = SDL_GetTicks() - Frame_Starting_Time;
-		if (Elapsed_Time < 16) SDL_Delay(16 - Elapsed_Time);
+		if (Elapsed_Time < CONFIGURATION_DISPLAY_REFRESH_RATE_PERIOD) SDL_Delay(CONFIGURATION_DISPLAY_REFRESH_RATE_PERIOD - Elapsed_Time);
 	}
 }
