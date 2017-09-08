@@ -134,6 +134,8 @@ int main(int argc, char *argv[])
 					break;
 					
 				case SDL_KEYDOWN:
+					// Quit program
+					if (Event.key.keysym.sym == SDLK_q) return EXIT_SUCCESS;
 					// Toggle image flipping
 					if (Event.key.keysym.sym == SDLK_f)
 					{
