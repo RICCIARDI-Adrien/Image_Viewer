@@ -26,6 +26,7 @@ static void MainDisplayProgramUsage(char *String_Program_Name)
 		"\n"
 		"Control keys :\n"
 		"  - Mouse wheel : zoom in/zoom out\n"
+		"  - Moving the mouse while image is zoomed allows to move in the zoomed image (don't forget that the window area represents the whole image, even when the later is zoomed)\n"
 		"  - 'f' key : toggle image flipping (first press leads to horizontal flipping, second press vertical flipping, third press both horizontal and vertical flipping, fourth press disables flipping)\n"
 		"  - 'q' key : exit program\n", String_Program_Name);
 }
@@ -46,7 +47,7 @@ int main(int argc, char *argv[])
 	SDL_Event Event;
 	SDL_Surface *Pointer_Surface_Image;
 	unsigned int Frame_Starting_Time = 0, Elapsed_Time;
-	int Mouse_X, Mouse_Y, Zoom_Factor = 1, Is_Mouse_Left_Button_Pressed = 0, i;
+	int Mouse_X, Mouse_Y, Zoom_Factor = 1, i;
 	TViewportFlippingModeID Flipping_Mode = VIEWPORT_FLIPPING_MODE_ID_NORMAL;
 	
 	// Check arguments
@@ -128,7 +129,7 @@ int main(int argc, char *argv[])
 						if (Zoom_Factor > 1) Zoom_Factor /= 2;
 					}
 					// Start zooming area from the mouse coordinates
-					SDL_GetMouseState(&Mouse_X, &Mouse_Y); // TODO put the mouse at the center of the zooming rectangle to make zooming more natural
+					SDL_GetMouseState(&Mouse_X, &Mouse_Y);
 					ViewportSetZoomedArea(Mouse_X, Mouse_Y, Zoom_Factor);
 					break;
 					
@@ -146,20 +147,10 @@ int main(int argc, char *argv[])
 					}
 					break;
 					
-				case SDL_MOUSEBUTTONDOWN:
-					if (Event.button.button == SDL_BUTTON_LEFT) Is_Mouse_Left_Button_Pressed = 1;
-					break;
-					
-				case SDL_MOUSEBUTTONUP:
-					if (Event.button.button == SDL_BUTTON_LEFT) Is_Mouse_Left_Button_Pressed = 0;
-					break;
-					
 				case SDL_MOUSEMOTION:
-					// Allow moving only when the mouse left button is pressed
-					if (Is_Mouse_Left_Button_Pressed)
+					// Do not recompute everything when the image is not zoomed
+					if (Zoom_Factor > 1)
 					{
-						// Reset zoom to avoid using erroneous coordinates stored in the ViewportSetZoomedArea() function from the preceding zoom
-						ViewportSetZoomedArea(0, 0, 1);
 						// Successively zoom to the current zoom level to make sure the internal ViewportSetZoomedArea() data are consistent
 						for (i = 1; i <= Zoom_Factor; i <<= 1) ViewportSetZoomedArea(Event.motion.x, Event.motion.y, i);
 					}
