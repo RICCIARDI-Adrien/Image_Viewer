@@ -1,5 +1,5 @@
 /** @file Viewport.c
- * @see Viewport.h for description.
+ * See Viewport.h for description.
  * @author Adrien RICCIARDI
  */
 #include <Configuration.h>
@@ -44,7 +44,7 @@ static SDL_RendererFlip Viewport_Adapted_Image_Flipping_Mode = SDL_FLIP_NONE;
  * @return 0 if the function succeeded,
  * @return -1 if an error occurred.
  */
-int ViewportAdaptImage(void)
+static int ViewportAdaptImage(void)
 {
 	unsigned int Pixel_Format;
 	int Original_Image_Width, Original_Image_Height, Horizontal_Scaling_Percentage, Vertical_Scaling_Percentage;

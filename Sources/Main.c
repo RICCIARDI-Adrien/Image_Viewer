@@ -18,17 +18,17 @@
  */
 static void MainDisplayProgramUsage(char *String_Program_Name)
 {
-	printf("Image Viewer (C) 2017 Adrien RICCIARDI.\n"
+	printf("Image Viewer (C) 2017-2021 Adrien RICCIARDI.\n"
 		"\n"
 		"Usage : %s Image_File | --help\n"
 		"Image_File is the file to open.\n"
 		"--help displays this message.\n"
 		"\n"
 		"Control keys :\n"
-		"  - Mouse wheel : zoom in/zoom out\n"
-		"  - Moving the mouse while image is zoomed allows to move in the zoomed image (don't forget that the window area represents the whole image, even when the later is zoomed)\n"
-		"  - 'f' key : toggle image flipping (first press leads to horizontal flipping, second press vertical flipping, third press both horizontal and vertical flipping, fourth press disables flipping)\n"
-		"  - 'q' key : exit program\n", String_Program_Name);
+		"  - Mouse wheel : zoom in/zoom out.\n"
+		"  - Moving the mouse while image is zoomed allows to move in the zoomed image (don't forget that the window area represents the whole image, even when the later is zoomed).\n"
+		"  - 'f' key : toggle image flipping (first press leads to horizontal flipping, second press vertical flipping, third press both horizontal and vertical flipping, fourth press disables flipping).\n"
+		"  - 'q' key : exit program.\n", String_Program_Name);
 }
 
 /** Automatically called on program exit, gracefully uninitialize SDL. */

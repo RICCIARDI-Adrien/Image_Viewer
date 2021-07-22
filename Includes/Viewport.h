@@ -43,7 +43,7 @@ void ViewportSetDimensions(int New_Viewport_Width, int New_Viewport_Height);
 /** Zoom a specific area of the image.
  * @param Viewport_X The viewport horizontal coordinate to start viewing from.
  * @param Viewport_Y The viewport vertical coordinate to start viewing from.
- * @param Zoom_Factor The zoom level (1 stands for no zoom (the image is fully displayed)).
+ * @param Zoom_Factor The zoom level (1 stands for no zoom, i.e. the image is fully displayed).
  */
 void ViewportSetZoomedArea(int Viewport_X, int Y, int Zoom_Factor);
 
