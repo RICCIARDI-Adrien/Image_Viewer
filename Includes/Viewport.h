@@ -53,4 +53,7 @@ void ViewportSetZoomedArea(int Viewport_X, int Y, int Zoom_Factor);
  */
 void ViewportSetFlippingMode(TViewportFlippingModeID Flipping_Mode_ID);
 
+/** Scale the displayed image to fit as much as possible the current viewport. */
+void ViewportScaleImage(void);
+
 #endif

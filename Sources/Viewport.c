@@ -21,6 +21,13 @@ static int Viewport_Width;
 /** Viewport height in pixels. */
 static int Viewport_Height;
 
+/** Cache the loaded image width in pixels. */
+static int Viewport_Original_Image_Width;
+/** Cache the loaded image height in pixels. */
+static int Viewport_Original_Image_Height;
+/** Cache the loaded image pixel format. */
+static unsigned int Viewport_Original_Image_Pixel_Format;
+
 /** Adjusted image width in pixels. */
 static int Viewport_Adjusted_Image_Width;
 /** Adjusted image height in pixels. */
@@ -40,26 +47,20 @@ static SDL_RendererFlip Viewport_Adapted_Image_Flipping_Mode = SDL_FLIP_NONE;
 //-------------------------------------------------------------------------------------------------
 // Private functions
 //-------------------------------------------------------------------------------------------------
-/** Add eventual additionnal borders to the original image to make sure its ratio is kept regardless of the viewport dimensions.
+/** Add eventual additional borders to the original image to make sure its ratio is kept regardless of the viewport dimensions.
+ * @param Image_Width The image to display width in pixels.
+ * @param Image_Height The image to display height in pixels.
  * @return 0 if the function succeeded,
  * @return -1 if an error occurred.
  */
-static int ViewportAdaptImage(void)
+static int ViewportAdaptImage(int Image_Width, int Image_Height)
 {
-	unsigned int Pixel_Format;
-	int Original_Image_Width, Original_Image_Height, Horizontal_Scaling_Percentage, Vertical_Scaling_Percentage;
+	int Horizontal_Scaling_Percentage, Vertical_Scaling_Percentage;
 	SDL_Rect Rectangle_Original_Image_Dimensions;
 	
-	// Get original image dimensions (these values could be kept as global, but SDL_QueryTexture() is really fast)
-	if (SDL_QueryTexture(Pointer_Viewport_Texture_Original_Image, &Pixel_Format, NULL, &Original_Image_Width, &Original_Image_Height) != 0)
-	{
-		printf("[%s:%d] Error : failed to query original image texture parameters (%s).\n", __FUNCTION__, __LINE__, SDL_GetError());
-		return -1;
-	}
-		
 	// Adjust image size to viewport ratio to make sure the image will keep its ratio
 	// Image is smaller than the viewport, keep viewport size
-	if ((Original_Image_Width < Viewport_Width) && (Original_Image_Height < Viewport_Height))
+	if ((Image_Width < Viewport_Width) && (Image_Height < Viewport_Height))
 	{
 		Viewport_Adjusted_Image_Width = Viewport_Width;
 		Viewport_Adjusted_Image_Height = Viewport_Height;
@@ -68,19 +69,19 @@ static int ViewportAdaptImage(void)
 	else
 	{
 		// Determine which size (horizontal or vertical) must be filled to keep the ratio (all computations are made with percentages to be easier to understand, and also because multiplying by 100 allows simple and fast fixed calculations with accurate enough results)
-		Horizontal_Scaling_Percentage = (100 * Original_Image_Width) / Viewport_Width; // Find how much the image is larger than the viewport
-		Vertical_Scaling_Percentage = (100 * Original_Image_Height) / Viewport_Height; // Find how much the image is higher than the viewport
+		Horizontal_Scaling_Percentage = (100 * Image_Width) / Viewport_Width; // Find how much the image is larger than the viewport
+		Vertical_Scaling_Percentage = (100 * Image_Height) / Viewport_Height; // Find how much the image is higher than the viewport
 		
 		// Horizontal size is more "compressed" than vertical one for this viewport, so display the full image horizontal size and adjust vertical size to keep ratio
 		if (Horizontal_Scaling_Percentage > Vertical_Scaling_Percentage)
 		{
-			Viewport_Adjusted_Image_Width = Original_Image_Width; // Keep the width
+			Viewport_Adjusted_Image_Width = Image_Width; // Keep the width
 			Viewport_Adjusted_Image_Height = (Viewport_Height * Horizontal_Scaling_Percentage) / 100; // Fill the image bottom to keep the ratio
 		}
 		// Vertical size is more "compressed" than horizontal one for this viewport, so display the full image vertical size and adjust horizontal size to keep ratio
 		else
 		{
-			Viewport_Adjusted_Image_Height = Original_Image_Height; // Keep the height
+			Viewport_Adjusted_Image_Height = Image_Height; // Keep the height
 			Viewport_Adjusted_Image_Width = (Viewport_Width * Vertical_Scaling_Percentage) / 100; // Fill the image right to keep the ratio
 		}
 	}
@@ -89,7 +90,7 @@ static int ViewportAdaptImage(void)
 	if (Pointer_Viewport_Texture_Adapted_Image != NULL) SDL_DestroyTexture(Pointer_Viewport_Texture_Adapted_Image);
 	
 	// Create a texture with the right dimensions to keep the image ratio
-	Pointer_Viewport_Texture_Adapted_Image = SDL_CreateTexture(Pointer_Viewport_Window_Renderer, Pixel_Format, SDL_TEXTUREACCESS_TARGET, Viewport_Adjusted_Image_Width, Viewport_Adjusted_Image_Height);
+	Pointer_Viewport_Texture_Adapted_Image = SDL_CreateTexture(Pointer_Viewport_Window_Renderer, Viewport_Original_Image_Pixel_Format, SDL_TEXTUREACCESS_TARGET, Viewport_Adjusted_Image_Width, Viewport_Adjusted_Image_Height);
 	if (Pointer_Viewport_Texture_Adapted_Image == NULL)
 	{
 		printf("[%s:%d] Error : failed to create the adjusted image texture (%s).\n", __FUNCTION__, __LINE__, SDL_GetError());
@@ -118,8 +119,8 @@ static int ViewportAdaptImage(void)
 	// Copy the original image on the adjusted image
 	Rectangle_Original_Image_Dimensions.x = 0;
 	Rectangle_Original_Image_Dimensions.y = 0;
-	Rectangle_Original_Image_Dimensions.w = Original_Image_Width - 1;
-	Rectangle_Original_Image_Dimensions.h = Original_Image_Height - 1;
+	Rectangle_Original_Image_Dimensions.w = Image_Width - 1;
+	Rectangle_Original_Image_Dimensions.h = Image_Height - 1;
 	if (SDL_RenderCopyEx(Pointer_Viewport_Window_Renderer, Pointer_Viewport_Texture_Original_Image, NULL, &Rectangle_Original_Image_Dimensions, 0, NULL, Viewport_Adapted_Image_Flipping_Mode) != 0)
 	{
 		printf("[%s:%d] Error : failed to render the original image texture on the adapted image texture (%s).\n", __FUNCTION__, __LINE__, SDL_GetError());
@@ -171,6 +172,13 @@ int ViewportInitialize(char *String_Window_Title, SDL_Surface *Pointer_Surface_I
 	// Do not allow the window to be too small because it can prevent the texture rendering from working
 	SDL_SetWindowMinimumSize(Pointer_Viewport_Window, CONFIGURATION_VIEWPORT_MINIMUM_WINDOW_WIDTH, CONFIGURATION_VIEWPORT_MINIMUM_WINDOW_HEIGHT);
 	
+	// Cache original image dimensions
+	if (SDL_QueryTexture(Pointer_Viewport_Texture_Original_Image, &Viewport_Original_Image_Pixel_Format, NULL, &Viewport_Original_Image_Width, &Viewport_Original_Image_Height) != 0)
+	{
+		printf("[%s:%d] Error : failed to query image texture parameters (%s).\n", __FUNCTION__, __LINE__, SDL_GetError());
+		return -1;
+	}
+	
 	return 0;
 }
 
@@ -186,8 +194,8 @@ void ViewportSetDimensions(int New_Viewport_Width, int New_Viewport_Height)
 	Viewport_Width = New_Viewport_Width;
 	Viewport_Height = New_Viewport_Height;
 	
-	// Add additionnal borders to the image to keep its ratio
-	ViewportAdaptImage();
+	// Add additional borders to the image to keep its ratio
+	ViewportAdaptImage(Viewport_Original_Image_Width, Viewport_Original_Image_Height);
 }
 
 void ViewportSetZoomedArea(int Viewport_X, int Viewport_Y, int Zoom_Factor)
@@ -261,5 +269,46 @@ void ViewportSetFlippingMode(TViewportFlippingModeID Flipping_Mode_ID)
 	}
 	
 	// Redraw the image with the newly selected flipping mode
-	ViewportAdaptImage();
+	ViewportAdaptImage(Viewport_Original_Image_Width, Viewport_Original_Image_Height);
+}
+
+void ViewportScaleImage(void)
+{
+	int Horizontally_Scaled_Pixels_Count, Vertically_Scaled_Pixels_Count, Scaling_Percentage;
+	
+	// Always reset the zoom to ease the following computations
+	ViewportSetZoomedArea(0, 0, 1);
+	
+	// Make the image fit the viewport if it is smaller
+	if ((Viewport_Original_Image_Width < Viewport_Width) && (Viewport_Original_Image_Height < Viewport_Height))
+	{
+		// Determine the amount of pixels not used by the image and keep the smallest one to make sure the image ratio is not modified
+		Horizontally_Scaled_Pixels_Count = Viewport_Width - Viewport_Original_Image_Width;
+		Vertically_Scaled_Pixels_Count = Viewport_Height - Viewport_Original_Image_Height;
+		if (Horizontally_Scaled_Pixels_Count < Vertically_Scaled_Pixels_Count)
+		{
+			// Compute how many percents the image will be horizontally scaled
+			Scaling_Percentage = (100 * (Viewport_Original_Image_Width + Horizontally_Scaled_Pixels_Count)) / Viewport_Original_Image_Width;
+			
+			// Scale the "camera"
+			Viewport_Rectangle_View.w = Viewport_Original_Image_Width + Horizontally_Scaled_Pixels_Count;
+			Viewport_Rectangle_View.h = (Viewport_Original_Image_Height * Scaling_Percentage) / 100; // Use the percentage computed right before to scale the vertical direction with the same proportion
+		}
+		else
+		{
+			// Compute how many percents the image will be horizontally scaled
+			Scaling_Percentage = (100 * (Viewport_Original_Image_Height + Vertically_Scaled_Pixels_Count)) / Viewport_Original_Image_Height;
+			
+			// Scale the "camera"
+			Viewport_Rectangle_View.w = (Viewport_Original_Image_Width * Scaling_Percentage) / 100;
+			Viewport_Rectangle_View.h = Viewport_Original_Image_Height + Vertically_Scaled_Pixels_Count;
+		}
+		
+		// Make sure the camera will display the whole image
+		Viewport_Rectangle_View.x = 0;
+		Viewport_Rectangle_View.y = 0;
+		
+		// Fill the empty part of the image if its ratio is different from the viewport ratio
+		ViewportAdaptImage(Viewport_Rectangle_View.w, Viewport_Rectangle_View.h);
+	}
 }

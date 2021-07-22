@@ -28,7 +28,8 @@ static void MainDisplayProgramUsage(char *String_Program_Name)
 		"  - Mouse wheel : zoom in/zoom out.\n"
 		"  - Moving the mouse while image is zoomed allows to move in the zoomed image (don't forget that the window area represents the whole image, even when the later is zoomed).\n"
 		"  - 'f' key : toggle image flipping (first press leads to horizontal flipping, second press vertical flipping, third press both horizontal and vertical flipping, fourth press disables flipping).\n"
-		"  - 'q' key : exit program.\n", String_Program_Name);
+		"  - 'q' key : exit program.\n"
+		"  - 's' key : scale the image to fit the viewport size.\n", String_Program_Name);
 }
 
 /** Automatically called on program exit, gracefully uninitialize SDL. */
@@ -134,8 +135,6 @@ int main(int argc, char *argv[])
 					break;
 					
 				case SDL_KEYDOWN:
-					// Quit program
-					if (Event.key.keysym.sym == SDLK_q) return EXIT_SUCCESS;
 					// Toggle image flipping
 					if (Event.key.keysym.sym == SDLK_f)
 					{
@@ -145,6 +144,16 @@ int main(int argc, char *argv[])
 						ViewportSetFlippingMode(Flipping_Mode);
 						
 						// Zoom has been reset when flipping the image
+						Zoom_Factor = 1;
+					}
+					// Quit program
+					else if (Event.key.keysym.sym == SDLK_q) return EXIT_SUCCESS;
+					// Scale image to fit viewport
+					else if (Event.key.keysym.sym == SDLK_s)
+					{
+						ViewportScaleImage();
+						
+						// Reset zoom
 						Zoom_Factor = 1;
 					}
 					break;
